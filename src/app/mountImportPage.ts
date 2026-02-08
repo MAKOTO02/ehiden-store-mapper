@@ -2,8 +2,7 @@ import { el } from "../ui/dom";
 import { renderTable } from "../ui/tableView";
 import { createTrimControls } from "../ui/trimControls";
 
-import { readTextFile } from "../core/fileRead";
-import { parseDelimitedSimple } from "../core/parseDelimited";
+import { loadRowsFromFile } from "../core/file/loadRowsFromFile";
 
 import { parseIndexSpec1Based } from "../core/edit/indexSpec";
 import { buildSelectionAND } from "../core/edit/selection";
@@ -18,7 +17,7 @@ export function mountImportPage(root: HTMLElement): () => void {
 
   const fileInput = el("input", {
     type: "file",
-    accept: ".csv,.tsv,text/csv,text/tab-separated-values",
+    accept: ".csv,.tsv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,text/tab-separated-values",
   }) as HTMLInputElement;
 
   const tableWrap = el("div", {
@@ -94,11 +93,11 @@ export function mountImportPage(root: HTMLElement): () => void {
     const file = fileInput.files?.[0];
     if (!file) return;
 
-    const text = await readTextFile(file);
-    const parsed = parseDelimitedSimple(text);
+    const { rows, kind } = await loadRowsFromFile(file);
 
-    originalRows = parsed.rows;
-    currentRows = originalRows;
+    originalRows = rows;
+    currentRows = rows;
+    info.textContent = `読み込み完了 (${kind}) / 行数=${rows.length}`;
     importPanel.setRows(currentRows);
 
     const colCount = getColCount(originalRows);
